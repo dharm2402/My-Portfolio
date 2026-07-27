@@ -1,0 +1,135 @@
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 2rem;
+}
+
+.navbar {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  padding: 1rem;
+  background: linear-gradient(135deg, #1e40af, #1e3a8a);
+  border-radius: 999px;
+  box-shadow: 0 6px 20px rgba(30, 64, 175, 0.15);
+}
+
+.nav-link {
+  text-decoration: none;
+  color: #e0f2fe;
+  font-weight: 700;
+  transition: color 0.3s ease;
+}
+
+.nav-link.active {
+  color: #06b6d4;
+  border-bottom: 2px solid #06b6d4;
+}
+
+.page-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.site-header {
+  background: linear-gradient(135deg, #1e40af, #0891b2);
+  color: white;
+  padding: 2rem;
+  border-radius: 1rem;
+  box-shadow: 0 10px 30px rgba(30, 64, 175, 0.15);
+}
+
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.3em;
+  font-size: 0.8rem;
+  margin-bottom: 0.5rem;
+}
+
+.lead {
+  max-width: 40rem;
+  font-size: 1.05rem;
+  line-height: 1.7;
+}
+
+.content-section {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(30, 64, 175, 0.06), 0 4px 12px rgba(30, 64, 175, 0.03);
+}
+
+.toggle-button {
+  align-self: flex-start;
+  border: none;
+  border-radius: 999px;
+  padding: 0.6rem 1rem;
+  background: #1e40af;
+  color: white;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.toggle-button:hover {
+  background: #1e3a8a;
+}
+
+.skill-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding: 0;
+  margin: 1rem 0 0;
+  list-style: none;
+}
+
+.skill-list li {
+  background: #e0f2fe;
+  color: #0c4a6e;
+  padding: 0.45rem 0.8rem;
+  border-radius: 999px;
+  font-weight: 600;
+  border-left: 3px solid #0891b2;
+}
+
+.project-list {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  margin-top: 1rem;
+}
+
+.project-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  padding: 1rem;
+  background: #f9fafb;
+}
+
+.form-label {
+  display: block;
+  margin-top: 1rem;
+  font-weight: 600;
+}
+
+.form-input {
+  width: 100%;
+  margin-top: 0.4rem;
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.75rem;
+}
+
+.form-preview {
+  margin-top: 1rem;
+  font-style: italic;
+}
+
+.site-footer {
+  text-align: center;
+  padding: 1rem 0 0.5rem;
+  color: var(--text);
+}
