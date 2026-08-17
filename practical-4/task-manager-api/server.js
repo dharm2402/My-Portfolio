@@ -1,7 +1,48 @@
 const express = require('express');
 const path = require('path');
+const { MongoClient } = require('mongodb');
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/';
+const DB_NAME = process.env.MONGO_DB_NAME || 'taskManagerDB';
+
+let tasksCollection;
+let countersCollection;
+
+// ─── Database Initialization ────────────────────────────────────────────────
+async function initDb() {
+  const client = new MongoClient(MONGO_URI);
+  await client.connect();
+  const db = client.db(DB_NAME);
+  tasksCollection = db.collection('tasks');
+  countersCollection = db.collection('counters');
+
+  await countersCollection.updateOne(
+    { _id: 'taskid' },
+    { $setOnInsert: { seq: 0 } },
+    { upsert: true }
+  );
+
+  console.log(`Connected to MongoDB at ${MONGO_URI} using database ${DB_NAME}`);
+}
+
+async function getNextTaskId() {
+  const result = await countersCollection.findOneAndUpdate(
+    { _id: 'taskid' },
+    { $inc: { seq: 1 } },
+    { returnDocument: 'after', upsert: true }
+  );
+
+  if (!result.value) {
+    const fallback = await countersCollection.findOne({ _id: 'taskid' });
+    if (!fallback) {
+      throw new Error('Failed to generate task ID');
+    }
+    return fallback.seq;
+  }
+
+  return result.value.seq;
+}
 
 // ─── Serve Static Frontend ───────────────────────────────────────────────────
 app.use(express.static(path.join(__dirname, 'public')));
@@ -32,10 +73,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// ─── In-Memory Data Store ────────────────────────────────────────────────────
-let tasks = [];
-let nextId = 1;
-
 // ─── Route-specific Middleware: ID Validator ─────────────────────────────────
 // Supplementary Problem 2 — validates that :id is a positive integer.
 const validateId = (req, res, next) => {
@@ -53,25 +90,36 @@ const validateId = (req, res, next) => {
 // ─── CRUD Routes ─────────────────────────────────────────────────────────────
 
 // GET /tasks — return all tasks
-app.get('/tasks', (req, res) => {
-  res.status(200).json({ tasks });
+app.get('/tasks', async (req, res, next) => {
+  try {
+    const tasks = await tasksCollection.find({ isDeleted: { $ne: true } }).sort({ id: 1 }).toArray();
+    res.status(200).json({ tasks });
+  } catch (err) {
+    next(err);
+  }
 });
 
 // POST /tasks — create a new task
-app.post('/tasks', (req, res, next) => {
+app.post('/tasks', async (req, res, next) => {
   try {
-    const { title, description } = req.body;
+    const { title, description, completed } = req.body;
     if (!title) {
       return res.status(400).json({ error: 'Bad Request', message: 'title is required.' });
     }
+
+    const id = await getNextTaskId();
     const task = {
-      id: nextId++,
+      id,
       title,
       description: description || '',
-      completed: false,
+      completed: Boolean(completed),
       createdAt: new Date().toISOString(),
+      updatedAt: null,
+      deletedAt: null,
+      isDeleted: false,
     };
-    tasks.push(task);
+
+    await tasksCollection.insertOne(task);
     res.status(201).json({ task });
   } catch (err) {
     next(err);
@@ -79,47 +127,75 @@ app.post('/tasks', (req, res, next) => {
 });
 
 // PUT /tasks/:id — update an existing task
-app.put('/tasks/:id', validateId, (req, res, next) => {
+app.put('/tasks/:id', validateId, async (req, res, next) => {
   try {
-    const task = tasks.find((t) => t.id === req.taskId);
-    if (!task) {
+    const { title, description, completed } = req.body;
+    const update = {};
+
+    if (title !== undefined) update.title = title;
+    if (description !== undefined) update.description = description;
+    if (completed !== undefined) update.completed = completed;
+
+    if (Object.keys(update).length === 0) {
+      return res.status(400).json({
+        error: 'Bad Request',
+        message: 'Request body must contain at least one field to update.',
+      });
+    }
+
+    const result = await tasksCollection.findOneAndUpdate(
+      { id: req.taskId, isDeleted: { $ne: true } },
+      { $set: { ...update, updatedAt: new Date().toISOString() } },
+      { returnDocument: 'after' }
+    );
+
+    if (!result.value) {
       return res.status(404).json({
         error: 'Not Found',
         message: `Task with id ${req.taskId} does not exist.`,
       });
     }
-    const { title, description, completed } = req.body;
-    if (title !== undefined) task.title = title;
-    if (description !== undefined) task.description = description;
-    if (completed !== undefined) task.completed = completed;
-    res.status(200).json({ task });
+
+    res.status(200).json({ task: result.value });
   } catch (err) {
     next(err);
   }
 });
 
 // DELETE /tasks/:id — remove a task
-app.delete('/tasks/:id', validateId, (req, res, next) => {
+app.delete('/tasks/:id', validateId, async (req, res, next) => {
   try {
-    const index = tasks.findIndex((t) => t.id === req.taskId);
-    if (index === -1) {
+    const update = {
+      isDeleted: true,
+      deletedAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    const result = await tasksCollection.findOneAndUpdate(
+      { id: req.taskId, isDeleted: { $ne: true } },
+      { $set: update },
+      { returnDocument: 'after' }
+    );
+
+    if (!result.value) {
       return res.status(404).json({
         error: 'Not Found',
         message: `Task with id ${req.taskId} does not exist.`,
       });
     }
-    const [deleted] = tasks.splice(index, 1);
-    res.status(200).json({ message: 'Task deleted successfully.', task: deleted });
+
+    res.status(200).json({ message: 'Task deleted successfully.', task: result.value });
   } catch (err) {
     next(err);
   }
 });
 
 // ─── TEMPORARY: Crash Test Route ──────────────────────────────────────────────
-   app.get('/crash-test', (req, res) => {
-     const x = undefined;
-     x.crash();
-   });
+app.get('/crash-test', (req, res) => {
+  const x = undefined;
+  x.crash();
+});
+
 // ─── 404 Handler for Undefined Routes ────────────────────────────────────────
 // Supplementary Problem 3 — structured JSON response for unknown paths.
 app.use((req, res) => {
@@ -139,6 +215,13 @@ app.use((err, req, res, next) => {
 });
 
 // ─── Start Server ─────────────────────────────────────────────────────────────
-app.listen(PORT, () => {
-  console.log(`Task Manager API running on http://localhost:${PORT}`);
-});
+initDb()
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`Task Manager API running on http://localhost:${PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.error('Failed to connect to MongoDB', err);
+    process.exit(1);
+  });

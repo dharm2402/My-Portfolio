@@ -72,3 +72,133 @@
   color: #9f1239;
   border: 1px solid #fecaca;
 }
+
+.error-message p {
+  margin: 0;
+}
+
+.error-message .error-detail {
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  opacity: 0.85;
+}
+
+.retry-button {
+  margin-top: 1rem;
+  padding: 0.5rem 1.25rem;
+  border: none;
+  border-radius: 6px;
+  background: #9f1239;
+  color: white;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.retry-button:hover {
+  opacity: 0.85;
+}
+
+.search-bar-wrapper {
+  margin-bottom: 1rem;
+}
+
+.search-bar {
+  width: 100%;
+  max-width: 320px;
+  padding: 0.6rem 0.9rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  font-size: 0.95rem;
+  color: #1e293b;
+  transition: border-color 0.2s ease;
+}
+
+.search-bar:focus {
+  outline: none;
+  border-color: #0891b2;
+  box-shadow: 0 0 0 3px rgba(8, 145, 178, 0.1);
+}
+
+.no-results {
+  color: #64748b;
+  font-style: italic;
+  padding: 1rem 0;
+}
+
+.repo-description {
+  min-height: 2.8rem;
+}
+
+.lang-loading {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  font-style: italic;
+  margin: 0.5rem 0;
+}
+
+.language-bar-wrapper {
+  margin: 0.75rem 0;
+}
+
+.language-bar {
+  display: flex;
+  height: 8px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: #f1f5f9;
+}
+
+.language-segment {
+  height: 100%;
+}
+
+.language-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  color: #475569;
+}
+
+.language-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.language-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.repo-meta {
+  display: flex;
+  gap: 1rem;
+  margin: 0.75rem 0;
+  font-size: 0.85rem;
+  color: #475569;
+}
+
+.repo-link {
+  display: inline-block;
+  margin-top: 0.5rem;
+  color: #0891b2;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.repo-link:hover {
+  text-decoration: underline;
+}
+
+.lang-empty {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  font-style: italic;
+  margin: 0.5rem 0;
+}
